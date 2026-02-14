@@ -102,20 +102,25 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # ────────────────────────────────────────────────
 # DATABASE
 # ────────────────────────────────────────────────
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL'),
-        conn_max_age=600,
-        conn_health_checks=True,
-        ssl_require=True,
-    )
-}
+db_url = os.getenv('DATABASE_URL')
 
-# Local fallback when no DATABASE_URL is present
-if not os.getenv('DATABASE_URL'):
-    DATABASES['default'] = {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if db_url and 'postgres' in db_url.lower():
+    # Production: Railway Postgres – enable SSL
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=db_url,
+            conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=True,
+        )
+    }
+else:
+    # Local: SQLite or any non-Postgres DB – no SSL
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=db_url or 'sqlite:///db.sqlite3',
+            conn_max_age=0,  # no pooling for SQLite
+        )
     }
 
 # ────────────────────────────────────────────────
