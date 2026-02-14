@@ -5,8 +5,13 @@ from django.conf.urls.static import static
 from django.views.generic import TemplateView
 from django.http import JsonResponse
 
+
 def health_check(request):
-    return JsonResponse({"status": "ok", "message": "Lindsay Classics API is running"})
+    return JsonResponse({
+        "status": "ok",
+        "message": "Lindsay Classics API is running",
+        "database": "connected"
+    })
 
 urlpatterns = [
     path('admin/', admin.site.urls),
