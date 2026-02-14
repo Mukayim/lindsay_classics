@@ -6,3 +6,4 @@ pillow==12.1.1
 sqlparse==0.5.5
 tzdata==2025.3
 requests>=2.31.0
+gunicorn==21.2.0
