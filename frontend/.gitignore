@@ -1,3 +1,50 @@
+# ============================================
+# ENVIRONMENT & SECRETS
+# ============================================
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+!.env.example
+
+# ============================================
+# PYTHON / DJANGO
+# ============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+pythonenv.*
+backend/venv/
+backend/env/
+
+# Django
+*.log
+*.pot
+*.pyc
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+backend/db.sqlite3
+backend/media/
+backend/staticfiles/
+
+# Django migrations (uncomment if you want to ignore migrations)
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+# ============================================
+# NODE / REACT / VITE
+# ============================================
 # Logs
 logs
 *.log
@@ -7,18 +54,62 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+frontend/node_modules/
+
+# Build outputs
 dist
 dist-ssr
+frontend/dist/
+frontend/build/
 *.local
 
-# Editor directories and files
-.vscode/*
+# ============================================
+# IDE & EDITOR FILES
+# ============================================
+.vscode/
 !.vscode/extensions.json
-.idea
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
+
+# ============================================
+# OS GENERATED FILES
+# ============================================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ============================================
+# TESTING & COVERAGE
+# ============================================
+.coverage
+.coverage.*
+.cache
+coverage.xml
+*.cover
+*.py,cover
+.pytest_cache/
+htmlcov/
+
+# ============================================
+# PROJECT SPECIFIC
+# ============================================
+# Backup files
+*.bak
+*.backup
+
+# Uploads (if any)
+uploads/
+media/
+
+# Environment specific
+.python-version
