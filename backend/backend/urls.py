@@ -1,26 +1,27 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import TemplateView
 from django.http import JsonResponse
 
-def api_root(request):
-    return JsonResponse({
-        "message": "Welcome to Lindsay Classics API",
-        "endpoints": {
-            "admin": "/admin/",
-            "shop": "/api/shop/",
-            "users": "/api/users/",
-        },
-        "frontend": "http://localhost:5173"
-    })
+def health_check(request):
+    return JsonResponse({"status": "ok", "message": "Lindsay Classics API is running"})
 
 urlpatterns = [
-    path('', api_root, name='api_root'),  # Add this line
     path('admin/', admin.site.urls),
     path('api/shop/', include('shop.urls')),
     path('api/users/', include('users.urls')),
+    path('health/', health_check, name='health_check'),
 ]
+
+# Serve React app for all other routes (in production)
+if not settings.DEBUG:
+    urlpatterns += [
+        re_path(r'^(?!api|admin|media|static|health).*$', 
+                TemplateView.as_view(template_name='index.html')),
+    ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
