@@ -86,7 +86,7 @@ MIDDLEWARE = [
 ]
 
 # ────────────────────────────────────────────────
-# URLS & TEMPLATES - UPDATED FOR REACT
+# URLS & TEMPLATES - UPDATED FOR REACT (silent if React not present)
 # ────────────────────────────────────────────────
 ROOT_URLCONF = 'backend.urls'
 
@@ -94,17 +94,16 @@ ROOT_URLCONF = 'backend.urls'
 REACT_BUILD_DIR = ROOT_DIR / 'frontend' / 'dist'
 TEMPLATES_DIRS = [os.path.join(BASE_DIR, 'templates')]
 
-# If React build exists, add it to template dirs
-if REACT_BUILD_DIR.exists():
+# If React build exists, add it to template dirs - silently skip if not found
+if REACT_BUILD_DIR.exists() and (REACT_BUILD_DIR / 'index.html').exists():
     TEMPLATES_DIRS.append(str(REACT_BUILD_DIR))
     print(f"[Django] React build found at: {REACT_BUILD_DIR}")
-else:
-    print(f"[Django] Warning: React build directory not found at {REACT_BUILD_DIR}")
+# No warning if React build doesn't exist - keeps logs clean
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': TEMPLATES_DIRS,  # Now includes both templates/ and frontend/dist/
+        'DIRS': TEMPLATES_DIRS,  # Now includes both templates/ and frontend/dist/ if exists
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -163,10 +162,10 @@ STATIC_ROOT = ROOT_DIR / 'staticfiles'
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Static files directories - include React assets
+# Static files directories - include React assets if they exist
 STATICFILES_DIRS = []
 
-# Add React assets if they exist
+# Add React assets if they exist - silently skip if not found
 if REACT_BUILD_DIR.exists():
     REACT_ASSETS_DIR = REACT_BUILD_DIR / 'assets'
     if REACT_ASSETS_DIR.exists():
