@@ -76,7 +76,7 @@ AUTH_USER_MODEL = 'users.User'
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Must be after SecurityMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -86,14 +86,25 @@ MIDDLEWARE = [
 ]
 
 # ────────────────────────────────────────────────
-# URLS & TEMPLATES
+# URLS & TEMPLATES - UPDATED FOR REACT
 # ────────────────────────────────────────────────
 ROOT_URLCONF = 'backend.urls'
+
+# Add React build directory to templates
+REACT_BUILD_DIR = ROOT_DIR / 'frontend' / 'dist'
+TEMPLATES_DIRS = [os.path.join(BASE_DIR, 'templates')]
+
+# If React build exists, add it to template dirs
+if REACT_BUILD_DIR.exists():
+    TEMPLATES_DIRS.append(str(REACT_BUILD_DIR))
+    print(f"[Django] React build found at: {REACT_BUILD_DIR}")
+else:
+    print(f"[Django] Warning: React build directory not found at {REACT_BUILD_DIR}")
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # Add this line
+        'DIRS': TEMPLATES_DIRS,  # Now includes both templates/ and frontend/dist/
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -105,6 +116,7 @@ TEMPLATES = [
         },
     },
 ]
+
 WSGI_APPLICATION = 'backend.wsgi.application'
 
 # ────────────────────────────────────────────────
@@ -151,11 +163,20 @@ STATIC_ROOT = ROOT_DIR / 'staticfiles'
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-REACT_BUILD_DIR = ROOT_DIR / 'frontend' / 'dist'
+# Static files directories - include React assets
+STATICFILES_DIRS = []
+
+# Add React assets if they exist
 if REACT_BUILD_DIR.exists():
-    STATICFILES_DIRS = [REACT_BUILD_DIR]
-else:
-    STATICFILES_DIRS = []
+    REACT_ASSETS_DIR = REACT_BUILD_DIR / 'assets'
+    if REACT_ASSETS_DIR.exists():
+        STATICFILES_DIRS.append(str(REACT_ASSETS_DIR))
+        print(f"[Django] React assets found at: {REACT_ASSETS_DIR}")
+
+# Add any other static directories
+OTHER_STATIC_DIR = BASE_DIR / 'static'
+if OTHER_STATIC_DIR.exists():
+    STATICFILES_DIRS.append(str(OTHER_STATIC_DIR))
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -209,5 +230,12 @@ LOGGING = {
     'root': {
         'handlers': ['console'],
         'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }

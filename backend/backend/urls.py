@@ -1,3 +1,4 @@
+# backend/urls.py
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
@@ -21,12 +22,13 @@ urlpatterns = [
     path('health/', health_check, name='health_check'),
 ]
 
-# Serve media files during development only
+# Serve static/media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
-# SPA fallback – Temporarily commented out until templates are set up
-# urlpatterns += [
-#     re_path(r'^.*', TemplateView.as_view(template_name='index.html')),
-# ]
+# IMPORTANT: This catch-all MUST be last
+# It serves React's index.html for any non-API routes
+urlpatterns += [
+    re_path(r'^.*', TemplateView.as_view(template_name='index.html'), name='react_app'),
+]
