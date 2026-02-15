@@ -6,22 +6,30 @@ import dj_database_url
 # ────────────────────────────────────────────────
 # BASE PATHS
 # ────────────────────────────────────────────────
-BASE_DIR = Path(__file__).resolve().parent          # points to backend/backend/
-ROOT_DIR = BASE_DIR.parent                          # points to project root (lindsay/)
+BASE_DIR = Path(__file__).resolve().parent          # backend/backend/
+ROOT_DIR = BASE_DIR.parent                          # project root (lindsay/)
 
 # ────────────────────────────────────────────────
 # LOAD .env FROM PROJECT ROOT (only locally)
 # ────────────────────────────────────────────────
 env_path = ROOT_DIR / '.env'
 
-# Load .env only if the file actually exists
-# (Railway / production environments do not have .env files)
+# We only attempt to load dotenv if the file exists
+# (Railway/production does not have .env files)
+dotenv_loaded = False
+
 if env_path.is_file():
-    from dotenv import load_dotenv
-    load_dotenv(env_path)
-    print(f"Loaded .env from: {env_path}")   # optional - helps debugging locally
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(env_path)
+        dotenv_loaded = True
+        print(f"[Django] Loaded .env from: {env_path}")
+    except ImportError:
+        print("[Django] Warning: python-dotenv not installed → skipping .env loading")
+    except Exception as e:
+        print(f"[Django] Error loading .env: {e}")
 else:
-    print("No .env file found → using system environment variables")
+    print("[Django] No .env file found at {env_path} → using system environment variables")
 
 # ────────────────────────────────────────────────
 # SECURITY & DEBUG
@@ -29,8 +37,9 @@ else:
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 if not SECRET_KEY:
     raise ValueError(
-        "DJANGO_SECRET_KEY environment variable is not set. "
-        "Add it to .env (local) or Railway Variables (production)."
+        "DJANGO_SECRET_KEY environment variable is not set.\n"
+        "→ Local: add it to .env file in project root\n"
+        "→ Production: add it in Railway → Variables tab"
     )
 
 DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() in ('true', '1', 'yes')
@@ -40,7 +49,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     'lindsay.up.railway.app',
-    # add custom domain later if you have one
+    # 'your-custom-domain.com',  # ← add when you have one
 ]
 
 # ────────────────────────────────────────────────
@@ -100,12 +109,12 @@ TEMPLATES = [
 WSGI_APPLICATION = 'backend.wsgi.application'
 
 # ────────────────────────────────────────────────
-# DATABASE
+# DATABASE – conditional SSL only for Postgres
 # ────────────────────────────────────────────────
 db_url = os.getenv('DATABASE_URL')
 
 if db_url and 'postgres' in db_url.lower():
-    # Production: Railway Postgres – enable SSL
+    # Railway Postgres → enable SSL
     DATABASES = {
         'default': dj_database_url.config(
             default=db_url,
@@ -115,31 +124,31 @@ if db_url and 'postgres' in db_url.lower():
         )
     }
 else:
-    # Local: SQLite or any non-Postgres DB – no SSL
+    # Local SQLite or other non-Postgres DB → no SSL
     DATABASES = {
         'default': dj_database_url.config(
             default=db_url or 'sqlite:///db.sqlite3',
-            conn_max_age=0,  # no pooling for SQLite
+            conn_max_age=0,
         )
     }
 
 # ────────────────────────────────────────────────
-# CORS
+# CORS – relaxed in dev, restricted in prod
 # ────────────────────────────────────────────────
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://lindsay.up.railway.app",
-    # "https://your-custom-domain.com" ← add later
+    # "https://your-custom-domain.com",  # ← add later
 ]
 CORS_ALLOW_CREDENTIALS = True
 
 # ────────────────────────────────────────────────
-# STATIC & MEDIA FILES
+# STATIC & MEDIA FILES (Whitenoise + React)
 # ────────────────────────────────────────────────
 STATIC_URL = '/static/'
-STATIC_ROOT = ROOT_DIR / 'staticfiles'              # collectstatic target
+STATIC_ROOT = ROOT_DIR / 'staticfiles'
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
@@ -157,7 +166,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # ────────────────────────────────────────────────
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # ← tighten in production!
+        'rest_framework.permissions.AllowAny',  # ← change to IsAuthenticated in prod!
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
@@ -166,16 +175,16 @@ REST_FRAMEWORK = {
 }
 
 # ────────────────────────────────────────────────
-# SECURITY & HTTPS (Railway handles HTTPS redirection)
+# SECURITY & HTTPS (Railway already enforces HTTPS)
 # ────────────────────────────────────────────────
 if not DEBUG:
-    # Do NOT set SECURE_SSL_REDIRECT = True here — causes redirect loop on Railway
+    # IMPORTANT: Do NOT enable SECURE_SSL_REDIRECT → causes infinite loop on Railway
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
-    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_SECONDS = 31536000          # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
@@ -189,7 +198,7 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Logging – visible in Railway logs
+# Logging – makes debugging easier in Railway
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
