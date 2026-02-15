@@ -33,14 +33,10 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 media/
-staticfiles/
 backend/db.sqlite3
 backend/media/
 backend/staticfiles/
-
-# Django migrations (uncomment if you want to ignore migrations)
-# */migrations/*.py
-# !*/migrations/__init__.py
+staticfiles/
 
 # ============================================
 # NODE / REACT / VITE
@@ -58,12 +54,17 @@ lerna-debug.log*
 node_modules
 frontend/node_modules/
 
-# Build outputs
-dist
-dist-ssr
-frontend/dist/
-frontend/build/
-*.local
+# Build outputs — COMMENT OUT to allow committing dist/ temporarily
+# dist
+# frontend/dist/
+frontend/.vite/
+frontend/node_modules/.cache/
+
+# NPM / Yarn cache
+.npm/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/install-state.gz
 
 # ============================================
 # IDE & EDITOR FILES
