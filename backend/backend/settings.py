@@ -14,22 +14,17 @@ ROOT_DIR = BASE_DIR.parent                          # project root (lindsay/)
 # ────────────────────────────────────────────────
 env_path = ROOT_DIR / '.env'
 
-# We only attempt to load dotenv if the file exists
-# (Railway/production does not have .env files)
-dotenv_loaded = False
-
 if env_path.is_file():
     try:
         from dotenv import load_dotenv
         load_dotenv(env_path)
-        dotenv_loaded = True
         print(f"[Django] Loaded .env from: {env_path}")
     except ImportError:
         print("[Django] Warning: python-dotenv not installed → skipping .env loading")
     except Exception as e:
         print(f"[Django] Error loading .env: {e}")
 else:
-    print("[Django] No .env file found at {env_path} → using system environment variables")
+    print("[Django] No .env file found → using system environment variables")
 
 # ────────────────────────────────────────────────
 # SECURITY & DEBUG
@@ -49,7 +44,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     'lindsay.up.railway.app',
-    # 'your-custom-domain.com',  # ← add when you have one
+    # add custom domain later
 ]
 
 # ────────────────────────────────────────────────
@@ -76,7 +71,7 @@ AUTH_USER_MODEL = 'users.User'
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Must be after SecurityMiddleware
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -86,24 +81,22 @@ MIDDLEWARE = [
 ]
 
 # ────────────────────────────────────────────────
-# URLS & TEMPLATES - UPDATED FOR REACT (silent if React not present)
+# URLS & TEMPLATES
 # ────────────────────────────────────────────────
 ROOT_URLCONF = 'backend.urls'
 
-# Add React build directory to templates
-REACT_BUILD_DIR = ROOT_DIR / 'frontend' / 'dist'
+# Template directories: project templates + React build (if present)
 TEMPLATES_DIRS = [os.path.join(BASE_DIR, 'templates')]
 
-# If React build exists, add it to template dirs - silently skip if not found
+REACT_BUILD_DIR = ROOT_DIR / 'frontend' / 'dist'
 if REACT_BUILD_DIR.exists() and (REACT_BUILD_DIR / 'index.html').exists():
     TEMPLATES_DIRS.append(str(REACT_BUILD_DIR))
     print(f"[Django] React build found at: {REACT_BUILD_DIR}")
-# No warning if React build doesn't exist - keeps logs clean
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': TEMPLATES_DIRS,  # Now includes both templates/ and frontend/dist/ if exists
+        'DIRS': TEMPLATES_DIRS,
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -124,7 +117,6 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 db_url = os.getenv('DATABASE_URL')
 
 if db_url and 'postgres' in db_url.lower():
-    # Railway Postgres → enable SSL
     DATABASES = {
         'default': dj_database_url.config(
             default=db_url,
@@ -134,7 +126,6 @@ if db_url and 'postgres' in db_url.lower():
         )
     }
 else:
-    # Local SQLite or other non-Postgres DB → no SSL
     DATABASES = {
         'default': dj_database_url.config(
             default=db_url or 'sqlite:///db.sqlite3',
@@ -150,7 +141,6 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://lindsay.up.railway.app",
-    # "https://your-custom-domain.com",  # ← add later
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -162,17 +152,14 @@ STATIC_ROOT = ROOT_DIR / 'staticfiles'
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Static files directories - include React assets if they exist
+# Static files directories – include React assets if present
 STATICFILES_DIRS = []
 
-# Add React assets if they exist - silently skip if not found
 if REACT_BUILD_DIR.exists():
-    REACT_ASSETS_DIR = REACT_BUILD_DIR / 'assets'
-    if REACT_ASSETS_DIR.exists():
-        STATICFILES_DIRS.append(str(REACT_ASSETS_DIR))
-        print(f"[Django] React assets found at: {REACT_ASSETS_DIR}")
+    STATICFILES_DIRS.append(str(REACT_BUILD_DIR))
+    print(f"[Django] React assets directory added: {REACT_BUILD_DIR}")
 
-# Add any other static directories
+# Any other static directories
 OTHER_STATIC_DIR = BASE_DIR / 'static'
 if OTHER_STATIC_DIR.exists():
     STATICFILES_DIRS.append(str(OTHER_STATIC_DIR))
@@ -185,7 +172,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # ────────────────────────────────────────────────
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # ← change to IsAuthenticated in prod!
+        'rest_framework.permissions.AllowAny',  # ← tighten in production!
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
@@ -197,13 +184,12 @@ REST_FRAMEWORK = {
 # SECURITY & HTTPS (Railway already enforces HTTPS)
 # ────────────────────────────────────────────────
 if not DEBUG:
-    # IMPORTANT: Do NOT enable SECURE_SSL_REDIRECT → causes infinite loop on Railway
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
-    SECURE_HSTS_SECONDS = 31536000          # 1 year
+    SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
@@ -217,7 +203,7 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Logging – makes debugging easier in Railway
+# Logging – more visible in Railway
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
