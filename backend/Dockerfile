@@ -1,17 +1,32 @@
-FROM python:3.11-slim
+# backend/Dockerfile (if placed in backend folder)
+FROM python:3.13-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PORT=8080
 
 WORKDIR /app
 
-# Copy requirements first for better caching
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy the entire backend directory contents
-COPY . .
+# Copy requirements
+COPY requirements.txt /app/backend/requirements.txt
 
-# manage.py is in /app
-RUN python manage.py migrate --noinput
-RUN python manage.py collectstatic --noinput
+RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 
-# Start gunicorn - using exec form to avoid shell issues
-CMD ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8000"]
+# Copy project files (note the different path)
+COPY . /app/
+
+ENV PYTHONPATH=/app
+
+RUN cd /app/backend && python manage.py collectstatic --noinput
+
+EXPOSE $PORT
+
+WORKDIR /app/backend
+
+CMD gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT
