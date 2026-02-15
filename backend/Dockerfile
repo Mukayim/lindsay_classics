@@ -12,8 +12,9 @@ COPY . .
 # Move to the nested backend directory where manage.py is
 WORKDIR /app/backend
 
-# Collect static files
+# Run migrations and collect static files
+RUN python manage.py migrate --noinput
 RUN python manage.py collectstatic --noinput
 
-# Start gunicorn - note the path to wsgi
-CMD gunicorn backend.wsgi:application --bind 0.0.0.0:\$PORT
+# Start gunicorn
+CMD gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT
