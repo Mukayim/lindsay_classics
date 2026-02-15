@@ -10,24 +10,22 @@ RUN npm run build
 FROM python:3.11-slim
 WORKDIR /app
 
-# Copy backend requirements (path is correct now - from root)
+# Copy requirements.txt from backend folder (it's directly in backend, not in a subfolder)
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy entire backend directory
 COPY backend/ ./backend/
 
-# Copy built frontend to Django's static directory (adjust path based on your frontend build output)
+# Copy built frontend to Django's static directory
 COPY --from=frontend-build /frontend/dist /app/backend/static/
 
-# Set working directory to where manage.py is
-WORKDIR /app/backend/backend
+# The manage.py is in /app/backend/, not /app/backend/backend/
+WORKDIR /app/backend
 
-# Collect static files
+# Run collectstatic (manage.py is here)
 RUN python manage.py collectstatic --noinput
 
-# Expose port
-EXPOSE 8000
-
-# Start command
-CMD gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT
+# For gunicorn, we need to point to the nested backend folder's wsgi
+# The wsgi.py is at /app/backend/backend/wsgi.py
+CMD gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --chdir /app/backend
