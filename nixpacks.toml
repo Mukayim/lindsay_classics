@@ -10,8 +10,10 @@ cmds = [
 [phases.build]
 cmds = [
   "cd frontend && npm run build",
+  "mkdir -p backend/static/vite",
+  "cp -r frontend/dist/* backend/static/vite/",
   "cd backend && python manage.py collectstatic --noinput"
 ]
 
 [start]
-cmd = "cd backend && gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT"
+cmd = "cd backend && gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 120"
