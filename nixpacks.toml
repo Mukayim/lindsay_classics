@@ -1,3 +1,17 @@
-# nixpacks.toml
+[phases.setup]
+nixPkgs = ["python311", "nodejs-18_x"]
+
+[phases.install]
+cmds = [
+  "cd backend && pip install -r requirements.txt",
+  "cd frontend && npm install"
+]
+
+[phases.build]
+cmds = [
+  "cd frontend && npm run build",
+  "cd backend && python manage.py collectstatic --noinput"
+]
+
 [start]
-cmd = "gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --workers 4 --timeout 120 --log-level info"
+cmd = "cd backend && gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT"

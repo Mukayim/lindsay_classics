@@ -10,22 +10,32 @@ RUN npm run build
 FROM python:3.11-slim
 WORKDIR /app
 
-# Copy requirements.txt from backend folder (it's directly in backend, not in a subfolder)
+# Debug: Show what's in the build context
+RUN echo "=== Listing root directory contents ===" && ls -la /app || true
+
+# Copy requirements.txt - this is the correct syntax
 COPY backend/requirements.txt .
+
+# Check if file was copied
+RUN echo "=== Checking if requirements.txt was copied ===" && ls -la || true
+
+# Install requirements
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy entire backend directory
 COPY backend/ ./backend/
 
-# Copy built frontend to Django's static directory
-COPY --from=frontend-build /frontend/dist /app/backend/static/
+# List contents after copy
+RUN echo "=== Contents after copying backend ===" && ls -la /app/backend/
 
-# The manage.py is in /app/backend/, not /app/backend/backend/
+# Change to backend directory where manage.py is
 WORKDIR /app/backend
 
-# Run collectstatic (manage.py is here)
+# Check if manage.py exists
+RUN echo "=== Checking for manage.py in /app/backend ===" && ls -la
+
+# Run collectstatic
 RUN python manage.py collectstatic --noinput
 
-# For gunicorn, we need to point to the nested backend folder's wsgi
-# The wsgi.py is at /app/backend/backend/wsgi.py
-CMD gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --chdir /app/backend
+# Start command
+CMD gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT
