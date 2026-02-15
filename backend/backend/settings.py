@@ -1,3 +1,4 @@
+# backend/settings.py
 import os
 from pathlib import Path
 import dj_database_url
@@ -5,11 +6,11 @@ import dj_database_url
 # ────────────────────────────────────────────────
 # BASE PATHS
 # ────────────────────────────────────────────────
-BASE_DIR = Path(__file__).resolve().parent          # backend/backend/
-ROOT_DIR = BASE_DIR.parent                          # project root (lindsay/)
+BASE_DIR = Path(__file__).resolve().parent  # backend/
+ROOT_DIR = BASE_DIR.parent                  # project root (lindsay/)
 
 # ────────────────────────────────────────────────
-# LOAD .env FROM PROJECT ROOT
+# LOAD .env FROM PROJECT ROOT (only locally)
 # ────────────────────────────────────────────────
 env_path = ROOT_DIR / '.env'
 
@@ -43,6 +44,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     'lindsay.up.railway.app',
+    # Add custom domain later if needed
 ]
 
 # ────────────────────────────────────────────────
@@ -83,8 +85,10 @@ MIDDLEWARE = [
 # ────────────────────────────────────────────────
 ROOT_URLCONF = 'backend.urls'
 
+# Template directories: project templates + React build (if present)
 TEMPLATES_DIRS = [os.path.join(BASE_DIR, 'templates')]
 
+# React build directory
 REACT_BUILD_DIR = ROOT_DIR / 'frontend' / 'dist'
 if REACT_BUILD_DIR.exists() and (REACT_BUILD_DIR / 'index.html').exists():
     TEMPLATES_DIRS.append(str(REACT_BUILD_DIR))
@@ -109,7 +113,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'backend.wsgi.application'
 
 # ────────────────────────────────────────────────
-# DATABASE
+# DATABASE – conditional SSL only for Postgres
 # ────────────────────────────────────────────────
 db_url = os.getenv('DATABASE_URL')
 
@@ -131,7 +135,7 @@ else:
     }
 
 # ────────────────────────────────────────────────
-# CORS
+# CORS – relaxed in dev, restricted in prod
 # ────────────────────────────────────────────────
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_ORIGINS = [
@@ -142,10 +146,11 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 # ────────────────────────────────────────────────
-# STATIC & MEDIA FILES
+# STATIC & MEDIA FILES (Whitenoise + React)
 # ────────────────────────────────────────────────
 STATIC_URL = '/static/'
 STATIC_ROOT = ROOT_DIR / 'staticfiles'
+
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 STATICFILES_DIRS = []
@@ -163,7 +168,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # ────────────────────────────────────────────────
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.AllowAny',  # tighten in production
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
@@ -172,7 +177,7 @@ REST_FRAMEWORK = {
 }
 
 # ────────────────────────────────────────────────
-# SECURITY (Production)
+# SECURITY & HTTPS (Railway already enforces HTTPS)
 # ────────────────────────────────────────────────
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
@@ -193,11 +198,17 @@ USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Logging
+# ────────────────────────────────────────────────
+# LOGGING
+# ────────────────────────────────────────────────
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'handlers': {'console': {'class': 'logging.StreamHandler'}},
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler'},
+    },
     'root': {'handlers': ['console'], 'level': 'INFO'},
-    'loggers': {'django': {'handlers': ['console'], 'level': 'INFO', 'propagate': False}},
+    'loggers': {
+        'django': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+    },
 }
