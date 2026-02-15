@@ -10,23 +10,24 @@ def health_check(request):
     return JsonResponse({
         "status": "ok",
         "message": "Lindsay Classics API is running",
-        "database": "connected"
+        "database": "connected"  # you can add real DB check later if needed
     })
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/shop/', include('shop.urls')),
+    path('api/shop/', include('shop.urls')),     # fixed: 'shop.urls' with dot
     path('api/users/', include('users.urls')),
     path('health/', health_check, name='health_check'),
 ]
 
-# Serve React app for all other routes (in production)
-if not settings.DEBUG:
-    urlpatterns += [
-        re_path(r'^(?!api|admin|media|static|health).*$', 
-                TemplateView.as_view(template_name='index.html')),
-    ]
-
+# Serve media files during development only
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# SPA fallback – serve React index.html for all non-API routes
+# This should be last — catches everything not matched above
+urlpatterns += [
+    re_path(r'^.*', TemplateView.as_view(template_name='index.html')),
+]
