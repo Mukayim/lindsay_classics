@@ -1,17 +1,11 @@
-# nixpacks.toml
-
 # ────────────── Setup Phase ──────────────
 [phases.setup]
-# Use Python for Django + Node for React
 nixPkgs = ["python311", "nodejs-18_x"]
 
 # ────────────── Install Phase ──────────────
 [phases.install]
 cmds = [
-  # Install backend dependencies
   "cd backend && pip install --upgrade pip && pip install -r requirements.txt",
-
-  # Install frontend dependencies
   "cd frontend && npm install"
 ]
 
@@ -21,18 +15,15 @@ cmds = [
   # Build React frontend
   "cd frontend && npm run build",
 
-  # Create directories in backend for React files
-  "mkdir -p ../backend/templates",
+  # Make directories in backend
   "mkdir -p ../backend/static/vite",
+  "mkdir -p ../backend/templates",
 
-  # Copy React build to backend
-  "cp -r frontend/dist/index.html ../backend/templates/",
+  # Copy React build files to Django
+  "cp frontend/dist/index.html ../backend/templates/",
   "cp -r frontend/dist/assets/* ../backend/static/vite/",
-  
-  # Copy React public folder (images, favicon, etc.) to static
-  "cp -r frontend/public/* ../backend/static/vite/",
 
-  # Collect Django static files (includes React assets)
+  # Collect Django static files
   "cd ../backend && python manage.py collectstatic --noinput"
 ]
 
