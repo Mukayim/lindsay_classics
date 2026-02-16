@@ -28,6 +28,9 @@ cmds = [
   # Copy React build to backend
   "cp -r frontend/dist/index.html ../backend/templates/",
   "cp -r frontend/dist/assets/* ../backend/static/vite/",
+  
+  # Copy React public folder (images, favicon, etc.) to static
+  "cp -r frontend/public/* ../backend/static/vite/",
 
   # Collect Django static files (includes React assets)
   "cd ../backend && python manage.py collectstatic --noinput"
