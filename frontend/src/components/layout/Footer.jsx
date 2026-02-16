@@ -8,7 +8,7 @@ const Footer = () => {
       <div className="footer-container">
         <div className="footer-section">
           <div className="footer-logo">
-            <img src="/images/logo.jpeg" alt="Lindsay Classics" />
+            <img src="/static/vite/images/logo.jpeg" alt="Lindsay Classics" />
             <h3>Lindsay Classics</h3>
           </div>
           <p>Your premier destination for classic luxury items since 1990.</p>

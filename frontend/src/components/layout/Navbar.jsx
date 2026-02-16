@@ -92,7 +92,7 @@ const Navbar = () => {
         {/* Logo - BIGGER and more prominent */}
         <Link to="/" className="navbar-logo" onClick={closeMenu}>
           <img 
-            src="/images/logo.jpeg" 
+            src="/static/vite/images/logo.jpeg" 
             alt="Lindsay Classics" 
             className="logo-image"
           />
