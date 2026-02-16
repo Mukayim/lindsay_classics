@@ -1,33 +1,28 @@
-# nixpacks.toml
+# nixpacks.toml — put in repo root (lindsay/)
 
 [phases.setup]
 nixPkgs = ["python311", "nodejs-18_x"]
 
 [phases.install]
 cmds = [
-  # Install backend dependencies
   "cd backend && pip install --upgrade pip && pip install -r requirements.txt",
-
-  # Install frontend dependencies
-  "cd frontend && npm install"
+  "cd frontend && npm ci"   # faster and more reliable than npm install
 ]
 
 [phases.build]
 cmds = [
-  # Build React frontend
-  "cd frontend && npm run build",
+  # Build React/Vite frontend
+  "cd frontend && npm run build || (echo 'Vite build failed!' && exit 1)",
 
-  # Make sure Django static/templates dirs exist
-  "mkdir -p ../backend/static/vite",
-  "mkdir -p ../backend/templates",
+  # Create the target folder if missing
+  "mkdir -p backend/backend/static/vite",
 
-  # Copy React build to Django
-  "cp frontend/dist/index.html ../backend/templates/",
-  "cp -r frontend/dist/assets/* ../backend/static/vite/",
+  # Copy entire Vite dist/ into backend/backend/static/vite/
+  "cp -r frontend/dist/* backend/backend/static/vite/ || (echo 'Copy failed - check frontend/dist exists' && exit 1)",
 
-  # Collect Django static files
-  "cd ../backend && python manage.py collectstatic --noinput"
+  # Run collectstatic (Whitenoise will serve from STATIC_ROOT)
+  "cd backend && python manage.py collectstatic --noinput --clear || (echo 'collectstatic failed!' && exit 1)"
 ]
 
 [start]
-cmd = "cd backend && gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 120"
+cmd = "cd backend && gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --workers 4 --timeout 120 --log-level info --access-logfile - --error-logfile -"

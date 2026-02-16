@@ -4,8 +4,10 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
 
-  // 🔥 CRITICAL FOR DJANGO PRODUCTION
-  base: '/static/vite/',
+  // ────────────────────────────────────────────────
+  // MOST IMPORTANT FOR DJANGO + WHITENOISE
+  // ────────────────────────────────────────────────
+  base: '/static/',     // ← change to this (matches STATIC_URL = '/static/')
 
   server: {
     port: 5173,
@@ -26,9 +28,17 @@ export default defineConfig({
 
   build: {
     outDir: 'dist',
-    assetsDir: 'assets',
-    sourcemap: false,
+    assetsDir: 'assets',          // keeps assets in dist/assets/
+    sourcemap: false,             // disable in production (smaller files)
     minify: 'esbuild',
     emptyOutDir: true,
+    // Optional: chunk large vendor libs
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+        }
+      }
+    }
   }
 })
