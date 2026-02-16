@@ -1,28 +1,40 @@
-# nixpacks.toml — put in repo root (lindsay/)
+# nixpacks.toml — place in repo root
 
 [phases.setup]
 nixPkgs = ["python311", "nodejs-18_x"]
 
+# -------------------------
+# INSTALL DEPENDENCIES
+# -------------------------
 [phases.install]
 cmds = [
+  # Backend dependencies
   "cd backend && pip install --upgrade pip && pip install -r requirements.txt",
-  "cd frontend && npm ci"   # faster and more reliable than npm install
+
+  # Frontend dependencies
+  "cd frontend && npm ci"
 ]
 
+# -------------------------
+# BUILD PHASE
+# -------------------------
 [phases.build]
 cmds = [
-  # Build React/Vite frontend
+  # Build React (Vite)
   "cd frontend && npm run build || (echo 'Vite build failed!' && exit 1)",
 
-  # Create the target folder if missing
+  # Ensure Django static folder exists
   "mkdir -p backend/backend/static/vite",
 
-  # Copy entire Vite dist/ into backend/backend/static/vite/
-  "cp -r frontend/dist/* backend/backend/static/vite/ || (echo 'Copy failed - check frontend/dist exists' && exit 1)",
+  # Copy Vite build output into Django static directory
+  "cp -r frontend/dist/* backend/backend/static/vite/ || (echo 'Copy failed - frontend/dist missing' && exit 1)",
 
-  # Run collectstatic (Whitenoise will serve from STATIC_ROOT)
+  # Collect static files for WhiteNoise
   "cd backend && python manage.py collectstatic --noinput --clear || (echo 'collectstatic failed!' && exit 1)"
 ]
 
+# -------------------------
+# START PHASE
+# -------------------------
 [start]
-cmd = "cd backend && gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --workers 4 --timeout 120 --log-level info --access-logfile - --error-logfile -"
+cmd = "cd backend && python manage.py migrate --noinput && gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --workers 4 --timeout 120 --log-level info --access-logfile - --error-logfile -"
