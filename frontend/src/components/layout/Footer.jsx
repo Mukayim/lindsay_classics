@@ -6,6 +6,7 @@ const Footer = () => {
   return (
     <footer className="footer">
       <div className="footer-container">
+        
         <div className="footer-section">
           <div className="footer-logo">
             <img src="/static/vite/images/logo.jpeg" alt="Lindsay Classics" />

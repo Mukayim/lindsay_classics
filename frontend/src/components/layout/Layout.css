@@ -1,0 +1,24 @@
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* ensures footer sits at bottom */
+}
+
+.main-content {
+  flex: 1; /* pushes footer down */
+  padding: 20px;
+  background-color: #f8f9fa; /* light background for contrast */
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 10px;
+  }
+}
