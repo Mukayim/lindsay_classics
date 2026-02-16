@@ -10,44 +10,19 @@ const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState('');
 
-  // Load cart and user data
   useEffect(() => {
     updateCartCount();
     checkAuth();
-    
-    // Listen for storage changes (cart updates)
     window.addEventListener('storage', updateCartCount);
     return () => window.removeEventListener('storage', updateCartCount);
   }, []);
 
-  // Prevent body scrolling when mobile menu is open
   useEffect(() => {
     if (isMenuOpen) {
       document.body.classList.add('menu-open');
-      // Prevent background scrolling on iOS
-      document.body.style.overflow = 'hidden';
     } else {
       document.body.classList.remove('menu-open');
-      document.body.style.overflow = 'unset';
     }
-    
-    // Cleanup function
-    return () => {
-      document.body.classList.remove('menu-open');
-      document.body.style.overflow = 'unset';
-    };
-  }, [isMenuOpen]);
-
-  // Close mobile menu when window is resized to desktop size
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth > 768 && isMenuOpen) {
-        setIsMenuOpen(false);
-      }
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, [isMenuOpen]);
 
   const updateCartCount = () => {
@@ -59,9 +34,7 @@ const Navbar = () => {
     const token = localStorage.getItem('auth_token');
     const email = localStorage.getItem('user_email');
     setIsLoggedIn(!!token);
-    if (email) {
-      setUserName(email.split('@')[0]);
-    }
+    if (email) setUserName(email.split('@')[0]);
   };
 
   const handleSearch = (e) => {
@@ -82,38 +55,23 @@ const Navbar = () => {
     navigate('/');
   };
 
-  const closeMenu = () => {
-    setIsMenuOpen(false);
-  };
-
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        {/* Logo - BIGGER and more prominent */}
-        <Link to="/" className="navbar-logo" onClick={closeMenu}>
-          <img 
-            src="/static/vite/images/logo.jpeg" 
-            alt="Lindsay Classics" 
-            className="logo-image"
-          />
+        <Link to="/" className="navbar-logo" onClick={() => setIsMenuOpen(false)}>
+          <img src="/static/vite/images/logo.jpeg" alt="Lindsay Classics" />
           <span className="logo-text">Lindsay Classics</span>
         </Link>
 
-        {/* Mobile menu button */}
-        <button 
+        <button
           className={`mobile-menu-btn ${isMenuOpen ? 'active' : ''}`}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Toggle menu"
-          aria-expanded={isMenuOpen}
         >
-          <span></span>
-          <span></span>
-          <span></span>
+          <span></span><span></span><span></span>
         </button>
 
-        {/* Navigation Links */}
         <div className={`navbar-menu ${isMenuOpen ? 'active' : ''}`}>
-          {/* Search Bar - MOVED INSIDE mobile menu for better mobile UX */}
           <form onSubmit={handleSearch} className="search-form mobile-search">
             <input
               type="text"
@@ -124,21 +82,30 @@ const Navbar = () => {
             <button type="submit">🔍</button>
           </form>
 
-          <Link to="/" className="nav-link" onClick={closeMenu}>
-            Home
-          </Link>
-          <Link to="/shop" className="nav-link" onClick={closeMenu}>
-            Shop
-          </Link>
-          <Link to="/about" className="nav-link" onClick={closeMenu}>
-            About
-          </Link>
-          <Link to="/contact" className="nav-link" onClick={closeMenu}>
-            Contact
-          </Link>
+          <Link to="/" className="nav-link" onClick={() => setIsMenuOpen(false)}>Home</Link>
+          <Link to="/shop" className="nav-link" onClick={() => setIsMenuOpen(false)}>Shop</Link>
+          <Link to="/about" className="nav-link" onClick={() => setIsMenuOpen(false)}>About</Link>
+          <Link to="/contact" className="nav-link" onClick={() => setIsMenuOpen(false)}>Contact</Link>
+
+          {isLoggedIn ? (
+            <div className="user-menu">
+              <button className="user-menu-btn">
+                👤 {userName || 'User'}
+              </button>
+              <div className="user-dropdown">
+                <Link to="/profile" onClick={() => setIsMenuOpen(false)}>Profile</Link>
+                <Link to="/orders" onClick={() => setIsMenuOpen(false)}>My Orders</Link>
+                <button onClick={handleLogout}>Logout</button>
+              </div>
+            </div>
+          ) : (
+            <div className="auth-links">
+              <Link to="/login" className="auth-link" onClick={() => setIsMenuOpen(false)}>Login</Link>
+              <Link to="/register" className="auth-link register" onClick={() => setIsMenuOpen(false)}>Sign Up</Link>
+            </div>
+          )}
         </div>
 
-        {/* Search Bar - Desktop version */}
         <form onSubmit={handleSearch} className="search-form desktop-search">
           <input
             type="text"
@@ -149,31 +116,10 @@ const Navbar = () => {
           <button type="submit">🔍</button>
         </form>
 
-        {/* User Actions */}
         <div className="navbar-actions">
-          <Link to="/cart" className="cart-icon" onClick={closeMenu}>
-            🛒
-            {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
+          <Link to="/cart" className="cart-icon" onClick={() => setIsMenuOpen(false)}>
+            🛒 {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
           </Link>
-          
-          {isLoggedIn ? (
-            <div className="user-menu">
-              <button className="user-menu-btn">
-                <span className="user-icon">👤</span>
-                <span className="user-name">{userName || 'User'}</span>
-              </button>
-              <div className="user-dropdown">
-                <Link to="/profile" onClick={closeMenu}>Profile</Link>
-                <Link to="/orders" onClick={closeMenu}>My Orders</Link>
-                <button onClick={handleLogout}>Logout</button>
-              </div>
-            </div>
-          ) : (
-            <div className="auth-links">
-              <Link to="/login" className="auth-link" onClick={closeMenu}>Login</Link>
-              <Link to="/register" className="auth-link register" onClick={closeMenu}>Sign Up</Link>
-            </div>
-          )}
         </div>
       </div>
     </nav>
