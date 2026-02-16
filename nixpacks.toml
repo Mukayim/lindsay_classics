@@ -1,25 +1,27 @@
-# ────────────── Setup Phase ──────────────
+# nixpacks.toml
+
 [phases.setup]
 nixPkgs = ["python311", "nodejs-18_x"]
 
-# ────────────── Install Phase ──────────────
 [phases.install]
 cmds = [
+  # Install backend dependencies
   "cd backend && pip install --upgrade pip && pip install -r requirements.txt",
+
+  # Install frontend dependencies
   "cd frontend && npm install"
 ]
 
-# ────────────── Build Phase ──────────────
 [phases.build]
 cmds = [
   # Build React frontend
   "cd frontend && npm run build",
 
-  # Make directories in backend
+  # Make sure Django static/templates dirs exist
   "mkdir -p ../backend/static/vite",
   "mkdir -p ../backend/templates",
 
-  # Copy React build files to Django
+  # Copy React build to Django
   "cp frontend/dist/index.html ../backend/templates/",
   "cp -r frontend/dist/assets/* ../backend/static/vite/",
 
@@ -27,6 +29,5 @@ cmds = [
   "cd ../backend && python manage.py collectstatic --noinput"
 ]
 
-# ────────────── Start Phase ──────────────
 [start]
 cmd = "cd backend && gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 120"
